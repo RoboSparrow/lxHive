@@ -26,6 +26,7 @@ namespace API\Parser;
 
 /**
  * Storage class for Request parser
+ * TODO remove API\Parser\* and use PSR-7 parser library instead
  */
 class ParserResult
 {

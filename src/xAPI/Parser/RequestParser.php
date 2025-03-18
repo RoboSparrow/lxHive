@@ -35,6 +35,7 @@ use API\HttpException;
  * @see https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Communication.md#15-content-types
  *
  * TODO This is a Slim 2.* leftover, needs to be replaced with an extended PSR7 compliant parser and storage
+ * TODO remove API\Parser\* and use PSR-7 parser library instead
  */
 class RequestParser
 {
@@ -218,7 +219,7 @@ class RequestParser
         $body = (string) $request->getBody();
         $parserResult->setRawPayload($body);
 
-        // #241 Slim3 parses application/json to assoc arrays
+        // #241 requires json parser middleware forcing object parsing! : Slim3 parses application/json to assoc arrays
         // $parsedBody = $request->getParsedBody();
         $parsedBody = json_decode($body, false);
         $parserResult->setPayload($parsedBody);
