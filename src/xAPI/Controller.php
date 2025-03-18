@@ -149,22 +149,11 @@ abstract class Controller
             $body->write($data);
         }
 
-        $date = \API\Util\Date::dateTimeToISO8601(\API\Util\Date::dateTimeExact());
-
-        $this->response = $this->response->withStatus($status)
-                                         ->withHeader('Access-Control-Allow-Origin', '*')
-                                         ->withHeader('Access-Control-Allow-Methods', 'POST,PUT,GET,OPTIONS,DELETE')
-                                         ->withHeader('Access-Control-Allow-Headers', 'Origin,Content-Type,Authorization,Accept,X-Experience-API-Version,If-Match,If-None-Match')
-                                         ->withHeader('Access-Control-Allow-Credentials', 'true')
-                                         ->withHeader('Access-Control-Expose-Headers', 'ETag,Last-Modified,Content-Length,X-Experience-API-Version,X-Experience-API-Consistent-Through')
-                                         ->withHeader('X-Experience-API-Version', Config::get(['xAPI', 'latest_version']))
-                                         ->withHeader('X-Experience-API-Consistent-Through', $date);
-
         if (!empty($allow)) {
             $this->response = $this->response->withHeader('Allow', strtoupper(implode(',', $allow)));
         }
 
-        return $this->response;
+        return $this->response->withStatus($status);
     }
 
     public function jsonResponse($status = 200, $data = [], $allow = [])
@@ -175,22 +164,11 @@ abstract class Controller
             $this->response = $this->response->withJson($data, $status);
         }
 
-        $date = \API\Util\Date::dateTimeToISO8601(\API\Util\Date::dateTimeExact());
-
-        $this->response = $this->response->withStatus($status)
-                                         ->withHeader('Access-Control-Allow-Origin', '*')
-                                         ->withHeader('Access-Control-Allow-Methods', 'POST,PUT,GET,OPTIONS,DELETE')
-                                         ->withHeader('Access-Control-Allow-Headers', 'Origin,Content-Type,Authorization,Accept,X-Experience-API-Version,If-Match,If-None-Match')
-                                         ->withHeader('Access-Control-Allow-Credentials', 'true')
-                                         ->withHeader('Access-Control-Expose-Headers', 'ETag,Last-Modified,Content-Length,X-Experience-API-Version,X-Experience-API-Consistent-Through')
-                                         ->withHeader('X-Experience-API-Version', Config::get(['xAPI', 'latest_version']))
-                                         ->withHeader('X-Experience-API-Consistent-Through', $date);
-
         if (!empty($allow)) {
             $this->response = $this->response->withHeader('Allow', strtoupper(implode(',', $allow)));
         }
 
-        return $this->response;
+        return $this->response->withStatus($status);
     }
 
     /**
