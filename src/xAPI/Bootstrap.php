@@ -41,6 +41,11 @@ use API\Controller;
 use API\Controller\Error;
 use API\Parser\RequestParser;
 
+use API\Middleware\JsonParserMiddleware;
+use API\Middleware\CorsHeadersMiddleware;
+use API\Middleware\XapiHeadersMiddleware;
+use API\Middleware\XapiLegacyRequestMiddleware;
+
 use API\Util\Collection;
 use API\Util\Versioning;
 use API\Console\Application as CliApp;
@@ -72,16 +77,24 @@ class Bootstrap
     /**
      * @var Bootstrap Mode
      */
-    const None    = 0;
-    const Web     = 1;
-    const Console = 2;
-    const Testing = 3;
-    const Config  = 4;
+    const None     = 0;
+    const Web      = 1;
+    const Console  = 2;
+    const Testing  = 3;
+    const Config   = 4;
+
+    /**
+     * @var Bootstrap lock state
+     */
+    const Locked   = 1;
+    const Unlocked = 0;
 
     private static $containerInstance = null;
     private static $containerInstantiated = false;
 
     private static $mode = 0;
+
+    private static $locked = 0;
 
     /**
      * constructor
@@ -128,6 +141,7 @@ class Bootstrap
             case self::Web: {
                 $bootstrap->initConfig();
                 $container = $bootstrap->initWebContainer();
+                self::$locked = self::Locked;
                 self::$containerInstance = $container;
                 self::$containerInstantiated = true;
                 return $bootstrap;
@@ -137,6 +151,7 @@ class Bootstrap
             case self::Console: {
                 $bootstrap->initConfig();
                 $container = $bootstrap->initCliContainer();
+                self::$locked = self::Locked;
                 self::$containerInstance = $container;
                 self::$containerInstantiated = true;
                 return $bootstrap;
@@ -146,6 +161,7 @@ class Bootstrap
             case self::Testing: {
                 $bootstrap->initConfig($testConfig);
                 $container = $bootstrap->initGenericContainer();
+                self::$locked = self::Unlocked;
                 self::$containerInstance = $container;
                 self::$containerInstantiated = true;
                 return $bootstrap;
@@ -154,11 +170,13 @@ class Bootstrap
 
             case self::Config: {
                 $bootstrap->initConfig();
+                self::$locked = self::Unlocked;
                 return $bootstrap;
                 break;
             }
 
             case self::None: {
+                self::$locked = self::Unlocked;
                 return $bootstrap;
                 break;
             }
@@ -170,6 +188,34 @@ class Bootstrap
     }
 
     /**
+     * Overwrite Bootstrap::$locked
+     * @return void
+     * @throw AppInitException if not UnitTest
+     */
+    public static function lock() {
+        if (defined('LXHIVE_UNITTEST')) {
+            self::$locked = self::Locked;
+            return;
+        }
+
+        throw new AppInitException('Bootstrap: overwriting lock not allowed outside of unit tests');
+    }
+
+    /**
+     * Overwrite Bootstrap::$locked
+     * @return void
+     * @throw AppInitException if not UnitTest
+     */
+    public static function unlock() {
+        if (defined('LXHIVE_UNITTEST')) {
+            self::$locked = self::Unlocked;
+            return;
+        }
+
+        throw new AppInitException('Bootstrap: overwriting lock not allowed outside of unit tests');
+    }
+
+    /**
      * Reset Bootstrap
      * @ignore do not compile to docs
      * @return void
@@ -177,11 +223,7 @@ class Bootstrap
      */
     public static function reset()
     {
-        if (
-               self::$mode === self::Testing
-            || self::$mode === self::None
-            || self::$mode === self::Config
-        ) {
+        if (self::$locked === self::Unlocked) {
             self::$mode = self::None;
             self::$containerInstantiated = false;
             self::$containerInstance = false;
@@ -333,7 +375,7 @@ class Bootstrap
 
         $handlerConfig = Config::get(['log', 'handlers'], ['ErrorLogHandler']);
         $defaultLevel = Config::get(['log', 'level'], Logger::DEBUG);
-        $defaultLog = $appRoot.'/storage/logs/' . Config::get('mode') . '.' . date('Y-m-d') . '.log';
+        $defaultLog = $appRoot.'/storage/logs/dev.log';
 
         $logger = new Logger('web');
         $formatter = new \Monolog\Formatter\LineFormatter("[%datetime%][%channel%][%level_name%]: %message% %context% %extra%\n", null, true, true);
@@ -548,57 +590,13 @@ class Bootstrap
         $container = self::$containerInstance;
         $app = new SlimApp($container);
 
-        // Slim parser override and CORS compatibility layer (Internet Explorer)
-        $app->add(function ($request, $response, $next) use ($container) {
+        // Slim middleware layers
+        // - The last middleware layer added is the first to be executed
 
-            $request->registerMediaTypeParser('application/json', function ($input) {
-                return json_decode($input);
-            });
-
-            if ($request->isPost() && $request->getQueryParam('method')) {
-                $method = $request->getQueryParam('method');
-                $request = $request->withMethod($method);
-                mb_parse_str($request->getBody(), $postData);
-                $parameters = new Collection($postData);
-                if ($parameters->has('content')) {
-                    $string = $parameters->get('content');
-                } else {
-                    // Content is the only valid body parameter...everything else are either headers or query parameters
-                    $string = '';
-                }
-
-                // Remove body, add headers
-                $parameters->remove('content');
-                $allowedHeaders = ['content-type', 'authorization', 'x-experience-api-version', 'content-length', 'if-match', 'if-none-match'];
-                foreach ($parameters as $key => $value) {
-                    if (in_array(strtolower($key), $allowedHeaders)) {
-                        $request = $request->withHeader($key, explode(',', $value));
-                        $parameters->remove($key);
-                    }
-                }
-
-                // Write the string into the body
-                $stream = fopen('php://memory', 'r+');
-                fwrite($stream, $string);
-                rewind($stream);
-                $body = new \Slim\Http\Stream($stream);
-                $request = $request->withBody($body)->reparseBody();
-
-                // Query string
-                $uri = $request->getUri();
-                $uri = $uri->withQuery(http_build_query($parameters->all()));
-                $request = $request->withUri($uri);
-
-                // Reparse the request - override request (sort of a hack)
-                $container->offsetUnset('request');
-                $container->offsetSet('request', $request);
-                //$container['parser']->parseRequest($request);
-            }
-
-            $response = $next($request, $response);
-
-            return $response;
-        });
+        $app->add(new XapiHeadersMiddleware());
+        $app->add(new CorsHeadersMiddleware());
+        $app->add(new JsonParserMiddleware());
+        $app->add(new XapiLegacyRequestMiddleware($container));
 
         ////
         // ROUTER
@@ -642,7 +640,9 @@ class Bootstrap
 
         foreach ($routes as $pattern => $route) {
             // register single route with methods and controller
+
             $app->map($route['methods'], $pattern, function ($request, $response, $args) use ($container, $route) {
+
                 $resource = Controller::load($container, $request, $response, $route['controller']);
                 // We could also throw an Exception on load and catch it here...but that might have a performance penalty? It is definitely a cleaner, more proper option.
                 if ($resource instanceof \Psr\Http\Message\ResponseInterface) {
