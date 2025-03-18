@@ -35,6 +35,7 @@ abstract class TestCase extends BaseTestCase
      */
     public static function setUpBeforeClass(): void
     {
+        Bootstrap::unlock();
         Bootstrap::reset();
         Bootstrap::factory(Bootstrap::Testing);
     }

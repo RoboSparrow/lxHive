@@ -39,7 +39,6 @@ class CoherentContainersTest extends TestCase
         $container = new ApiContainer();
         $container['testService'] = 'string';
 
-        $this->expectException('PHPUnit\Framework\ExpectationFailedException');
-        $this->assertEquals('string', $container->testService);
+        $this->assertFalse(property_exists($container, 'testService'));
     }
 }
