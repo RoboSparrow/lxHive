@@ -139,4 +139,17 @@ class Auth extends Admin
         $token = $basicAuthService->addToken($name, $description, $expiresAt, $user, $selectedScopes, $key, $secret);
         return $token;
     }
+
+    /**
+     * Deletes  basic Token
+     * @param string $key
+     *
+     * @return \API\Document\AccessToken
+     */
+    public function deleteToken($key)
+    {
+        $basicAuthService = new BasicAuthService($this->getContainer());
+        $token = $basicAuthService->deleteToken($key);
+        return $token;
+    }
 }

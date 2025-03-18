@@ -88,6 +88,17 @@ class User extends Admin
     }
 
     /**
+     * Get user for email address (unique field)
+     * @param string $email
+     * @return stdClass|null
+     */
+    public function getUserByEmail($email)
+    {
+        $service = new UserService($this->getContainer());
+        return $service->findByEmail($email);
+    }
+
+    /**
      * Fetch all user email addresses
      *
      * @return array collection of user records with email as key

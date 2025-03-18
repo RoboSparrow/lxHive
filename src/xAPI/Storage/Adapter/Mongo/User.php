@@ -175,16 +175,16 @@ class User extends Provider implements UserInterface, SchemaInterface
 
         return $document;
     }
-    
+
     /**
      * {@inheritDoc}
      */
-    public function findByEmail($username)
+    public function findByEmail($email)
     {
         $storage = $this->getContainer()->get('storage');
         $expression = $storage->createExpression();
 
-        $expression->where('email', $username);
+        $expression->where('email', $email);
 
         $document = $storage->findOne(self::COLLECTION_NAME, $expression);
 

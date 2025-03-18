@@ -74,6 +74,15 @@ class AccessToken extends Document
     }
 
     /**
+     * Sets document property: userId
+     * @param string|null $userId
+     */
+    public function setUserId($userId)
+    {
+        $this->data->userId = $userId;
+    }
+
+    /**
      * Sets document property: expiresIn
      * @param int $expiresIn
      */

@@ -178,6 +178,15 @@ class Statement extends Document
         return $this->data->statement->id;
     }
 
+    /**
+     * Sets document property: userId
+     * @param string|null $userId
+     */
+    public function setUserId($userId)
+    {
+        $this->data->userId = $userId;
+    }
+
     public function renderCanonical()
     {
         throw new \InvalidArgumentException('The \'canonical\' statement format is currently not supported.', Controller::STATUS_NOT_IMPLEMENTED);

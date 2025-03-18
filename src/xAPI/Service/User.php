@@ -90,7 +90,12 @@ class User extends Service
     public function findById($id)
     {
         $document = $this->getStorage()->getUserStorage()->findById($id);
+        return $document;
+    }
 
+    public function findByEmail($email)
+    {
+        $document = $this->getStorage()->getUserStorage()->findByEmail($email);
         return $document;
     }
 
