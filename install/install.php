@@ -273,7 +273,7 @@ foreach ($user_entries as $entry) {
     if ($basic_auth) {
         $name = 'auto_token '.$user->name;
         $description = 'imported from '.$src_path.'/LRS.yml';
-        $expiresAt = null ; //TODO
+        $expiresAt = null; //TODO
 
         $key = null;
         $secret = null;

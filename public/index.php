@@ -33,4 +33,5 @@ use API\Bootstrap;
 
 $bootstrapper = Bootstrap::factory(Bootstrap::Web);
 $app = $bootstrapper->bootWebApp();
+
 $app->run();
