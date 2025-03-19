@@ -89,9 +89,10 @@ class ErrorHandler
         $body = new Body(fopen('php://temp', 'r+'));
         $body->write($out);
 
+        // TODO text/html for oauth
         return $response
             ->withStatus(($statusCode > 99 && $statusCode < 600) ? $statusCode : 500)
-            ->withHeader('Content-type', $contentType)
+            ->withHeader('Content-Type', 'application/json')
             ->withBody($body);
     }
 
