@@ -59,6 +59,13 @@ class XapiLegacyRequestMiddleware
         $method = strtoupper($request->getMethod());
         $params = $request->getQueryParams();
 
+        // #313 special case: lxHive `more` URL for paginated statement requests (i.e. POST /statements?method=GET&until_id=59b8cdd0a097fa60676f2295)
+        $until_id = null;
+        if (isset($params['until_id'])) {
+            $until_id = $params['until_id'];
+            unset($params['until_id']);
+        }
+
         // All xAPI requests issued MUST be POST
         if ($method !== 'POST') {
             $response = $next($request, $response);
@@ -81,12 +88,16 @@ class XapiLegacyRequestMiddleware
                 $code);
         }
 
+        // transform method
         $request = $request->withMethod($params['method']);
+
+        // parse formdata body
         $body = (string)$request->getBody();
         mb_parse_str($body, $data);
 
         $content = (!empty($data['content'])) ? $data['content'] : null;
 
+        // transform query and headers
         $query = [];
         foreach ($data as $key => $value) {
             if (in_array($key, ['method', 'content'])) {
@@ -106,6 +117,10 @@ class XapiLegacyRequestMiddleware
         }
 
         // set new query
+        if ($until_id) {
+            $query['until_id'] = $until_id;
+        }
+
         $uri = $request->getUri();
         $uri = $uri->withQuery(http_build_query($query));
         $request = $request->withUri($uri);

@@ -52,7 +52,7 @@ class XapiLegacyRequestMiddlewareTest extends ApiTestCase
 
         $statementId = $this->createUuid();
 
-        $statement = $this->createStatement($this->email, 'tested', 'legacyStatement');
+        $statement = $this->createStatement($this->email, 'tested/PUT', 'legacyStatement/PUT');
         $data = [
             // headers
             'Content-Type'             => 'application/json',
