@@ -41,6 +41,7 @@ use API\Controller;
 use API\Controller\Error;
 use API\Parser\RequestParser;
 
+use API\Handlers\ErrorHandler;
 use API\Middleware\JsonParserMiddleware;
 use API\Middleware\CorsHeadersMiddleware;
 use API\Middleware\XapiHeadersMiddleware;
@@ -375,7 +376,7 @@ class Bootstrap
 
         $handlerConfig = Config::get(['log', 'handlers'], ['ErrorLogHandler']);
         $defaultLevel = Config::get(['log', 'level'], Logger::DEBUG);
-        $defaultLog = $appRoot.'/storage/logs/dev.log';
+        $defaultLog = $appRoot.'/storage/logs/' . Config::get('mode') . '.' . date('Y-m-d') . '.log';
 
         $logger = new Logger('web');
         $formatter = new \Monolog\Formatter\LineFormatter("[%datetime%][%channel%][%level_name%]: %message% %context% %extra%\n", null, true, true);
@@ -418,43 +419,17 @@ class Bootstrap
 
         $container['logger'] = $logger;
 
+        // Errors
         $container['errorHandler'] = function ($container) {
-            return function ($request, $response, $exception) use ($container) {
-                $data = [];
-                $code = $exception->getCode();
-                $message = $exception->getMessage();
-                if ($code < 100) {
-                    $code = 500;
-                }
-
-                // catch MongoDB exceptions, adjust codes AND prevent exception messages giving away connection details
-                if (is_subclass_of($exception, '\MongoDB\Driver\Exception\Exception')) {
-                    $code = 500;
-                    if(Config::get('mode', 'production') !== 'development' ){
-                        $message = 'Database error: ['.$exception->getCode().'], '.get_class($exception);
-                    }
-                }
-
-                if (method_exists($exception, 'getData')) {
-                    $data = $exception->getData();
-                }
-                $errorResource = new Error($container, $request, $response);
-                $error = $errorResource->error($code, $message, $data);
-
-                return $error;
-                //return $c['response']->withStatus($code)
-                //                     ->withHeader('Content-Type', 'application/json')
-                //                     ->write(json_encode([$e->getMessage(), $data]));
-            };
+            return new ErrorHandler($container);
         };
 
+        // Extensions
         $container['eventDispatcher'] = new EventDispatcher();
 
         // Parser
         $container['parser'] = function ($container) {
-            $parser = new RequestParser($container['request']);
-
-            return $parser;
+            return new RequestParser($container['request']);
         };
 
         // Request logging

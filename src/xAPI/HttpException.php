@@ -23,9 +23,12 @@
 
 namespace API;
 
+use Slim\Http\StatusCode;
+
 class HttpException extends \Exception
 {
     private $data = null;
+    private $statusCode = null;
 
     /**
      * Prepares a json response exception.
@@ -42,7 +45,18 @@ class HttpException extends \Exception
     public function __construct($message, $statusCode = 400, $data = [], \Exception $previous = null)
     {
         $this->data = $data;
+        $this->statusCode = $statusCode;
         parent::__construct($message, $statusCode, $previous);
+    }
+
+    /**
+     * Get statuscode.
+     *
+     * @return int $statusCode
+     */
+    public function getStatusCode()
+    {
+        return $this->statusCode;
     }
 
     /**
