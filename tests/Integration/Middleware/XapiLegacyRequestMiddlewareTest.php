@@ -51,6 +51,8 @@ class XapiLegacyRequestMiddlewareTest extends ApiTestCase
         // --> PUT
 
         $statementId = $this->createUuid();
+        $now = date('c');
+        $moreUrl = null;
 
         $statement = $this->createStatement($this->email, 'tested/PUT', 'legacyStatement/PUT');
         $data = [
@@ -105,11 +107,56 @@ class XapiLegacyRequestMiddlewareTest extends ApiTestCase
         $response = $this->runApp('POST', '/statements?method=HEAD', ['Content-Type' => 'application/x-www-form-urlencoded'], $formData);
         $status = $response->getStatusCode();
         $this->assertEquals($status, StatusCode::HTTP_OK, 'status code');
-    }
 
-    public function testLegacyNoOtherQueryParamsAllowed(): void
-    {
-        $query = 'method=GET&secondParam=NotAllowed';
+        // --> POST Yes, it's silly. However, a client sending batches might exactly do this
+
+        $statement = $this->createStatement($this->email, 'tested/POST', 'legacyStatement/POST');
+        $data = [
+            // headers
+            'Content-Type'             => 'application/json',
+            'X-Experience-API-Version' => $this->xapiVersion(),
+            'Authorization'            => 'Basic '.base64_encode($this->key.':'.$this->secret),
+            // data
+            'content'                  => json_encode($statement),
+        ];
+        $formData = http_build_query($data);
+
+        $response = $this->runApp('POST', '/statements?method=POST', ['Content-Type' => 'application/x-www-form-urlencoded'], $formData);
+        $status = $response->getStatusCode();
+
+        $data = json_decode((string) $response->getBody(), false);
+
+        $this->assertEquals($status, StatusCode::HTTP_OK, 'status code');
+        $this->assertTrue(is_array($data));
+        $this->assertEquals(count($data), 1);
+
+        // --> GET ?until&limit => trigger: more URL
+
+        $data = [
+            // headers
+            'Content-Type'             => 'application/json',
+            'X-Experience-API-Version' => $this->xapiVersion(),
+            'Authorization'            => 'Basic '.base64_encode($this->key.':'.$this->secret),
+            // query params
+            'until'                    => $now,
+            'limit'                    => 1,
+        ];
+        $formData = http_build_query($data);
+
+        $response = $this->runApp('POST', '/statements?method=GET', ['Content-Type' => 'application/x-www-form-urlencoded'], $formData);
+        $status = $response->getStatusCode();
+        $data = json_decode((string) $response->getBody(), false);
+
+        $this->assertEquals($status, StatusCode::HTTP_OK, 'status code');
+        $this->assertIsObject($data);
+        $this->assertObjectHasProperty('statements', $data);
+        $this->assertObjectHasProperty('more', $data);
+
+        $moreUrl = $data->more;
+
+        // --> GET ?method&secondParam reject additional query  param ( 'no other param' rule)
+
+        $url = '/statements?method=GET&secondParam=NotAllowed';
 
         // --> GET
 
@@ -121,8 +168,30 @@ class XapiLegacyRequestMiddlewareTest extends ApiTestCase
         ];
         $formData = http_build_query($data);
 
-        $response = $this->runApp('POST', '/statements?'.$query, ['Content-Type' => 'application/x-www-form-urlencoded'], $formData);
+        $response = $this->runApp('POST', $url, ['Content-Type' => 'application/x-www-form-urlencoded'], $formData);
         $status = $response->getStatusCode();
         $this->assertEquals($status, StatusCode::HTTP_BAD_REQUEST, 'status code');
+
+        // --> GET ?method&until_id accept more URL as an additional query Param (lxHive specific excpetion to 'no other param' rule)
+
+        $url = $moreUrl .'&method=GET';
+
+        $data = [
+            // headers
+            'Content-Type'             => 'application/json',
+            'X-Experience-API-Version' => $this->xapiVersion(),
+            'Authorization'            => 'Basic '.base64_encode($this->key.':'.$this->secret),
+            // query params
+        ];
+        $formData = http_build_query($data);
+
+        $response = $this->runApp('POST', $url, ['Content-Type' => 'application/x-www-form-urlencoded'], $formData);
+        $status = $response->getStatusCode();
+        $data = json_decode((string) $response->getBody(), false);
+
+        $this->assertEquals($status, StatusCode::HTTP_OK, 'status code');
+        $this->assertIsObject($data);
+        $this->assertObjectHasProperty('statements', $data);
     }
+
 }
