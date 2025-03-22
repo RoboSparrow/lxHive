@@ -178,91 +178,7 @@
                     "additionalProperties": false
                 },
                 "context": {
-                    "type": "object",
-                    "properties": {
-                        "registration": {
-                            "type": "string",
-                            "oneOf": [{"$ref": "#/definitions/uuid"}]
-                        },
-                        "instructor": {
-                            "type": "object",
-                            "oneOf": [{"$ref": "#/definitions/agent"}, {"$ref": "#/definitions/group"}]
-                        },
-                        "team": {
-                            "type": "object",
-                            "oneOf": [{"$ref": "#/definitions/agent"}, {"$ref": "#/definitions/group"}]
-                        },
-                        "contextActivities": {
-                            "type": "object",
-                            "properties": {
-                                "parent": {
-                                    "type": ["object", "array"],
-                                    "oneOf" : [
-                                        {
-                                            "$ref": "#/definitions/activity"
-                                        },
-                                        {
-                                            "type": "array",
-                                            "items": {"$ref": "#/definitions/activity"}
-                                        }
-                                    ]
-                                },
-                                "grouping": {
-                                    "type": ["object", "array"],
-                                    "oneOf" : [
-                                        {
-                                            "$ref": "#/definitions/activity"
-                                        },
-                                        {
-                                            "type": "array",
-                                            "items": {"$ref": "#/definitions/activity"}
-                                        }
-                                    ]
-                                },
-                                "category": {
-                                    "type": ["object", "array"],
-                                    "oneOf" : [
-                                        {
-                                            "$ref": "#/definitions/activity"
-                                        },
-                                        {
-                                            "type": "array",
-                                            "items": {"$ref": "#/definitions/activity"}
-                                        }
-                                    ]
-                                },
-                                "other": {
-                                    "type": ["object", "array"],
-                                    "oneOf" : [
-                                        {
-                                            "$ref": "#/definitions/activity"
-                                        },
-                                        {
-                                            "type": "array",
-                                            "items": {"$ref": "#/definitions/activity"}
-                                        }
-                                    ]
-                                }
-                            },
-                            "additionalProperties": false
-                        },
-                        "revision": {
-                            "type": "string"
-                        },
-                        "platform": {
-                            "type": "string"
-                        },
-                        "language": {
-                            "type": "string"
-                        },
-                        "statement": {
-                            "$ref": "#/definitions/statementref"
-                        },
-                        "extensions": {
-                            "$ref": "#/definitions/extensions"
-                        }
-                    },
-                    "additionalProperties": false
+                    "$ref": "#/definitions/context"
                 },
                 "timestamp": {
                     "type": "string"
@@ -341,6 +257,93 @@
                 }
             }
         },
+        "context": {
+            "type": "object",
+            "properties": {
+                "registration": {
+                    "type": "string",
+                    "oneOf": [{"$ref": "#/definitions/uuid"}]
+                },
+                "instructor": {
+                    "type": "object",
+                    "oneOf": [{"$ref": "#/definitions/agent"}, {"$ref": "#/definitions/group"}]
+                },
+                "team": {
+                    "type": "object",
+                    "oneOf": [{"$ref": "#/definitions/agent"}, {"$ref": "#/definitions/group"}]
+                },
+                "contextActivities": {
+                    "type": "object",
+                    "properties": {
+                        "parent": {
+                            "type": ["object", "array"],
+                            "oneOf" : [
+                                {
+                                    "$ref": "#/definitions/activity"
+                                },
+                                {
+                                    "type": "array",
+                                    "items": {"$ref": "#/definitions/activity"}
+                                }
+                            ]
+                        },
+                        "grouping": {
+                            "type": ["object", "array"],
+                            "oneOf" : [
+                                {
+                                    "$ref": "#/definitions/activity"
+                                },
+                                {
+                                    "type": "array",
+                                    "items": {"$ref": "#/definitions/activity"}
+                                }
+                            ]
+                        },
+                        "category": {
+                            "type": ["object", "array"],
+                            "oneOf" : [
+                                {
+                                    "$ref": "#/definitions/activity"
+                                },
+                                {
+                                    "type": "array",
+                                    "items": {"$ref": "#/definitions/activity"}
+                                }
+                            ]
+                        },
+                        "other": {
+                            "type": ["object", "array"],
+                            "oneOf" : [
+                                {
+                                    "$ref": "#/definitions/activity"
+                                },
+                                {
+                                    "type": "array",
+                                    "items": {"$ref": "#/definitions/activity"}
+                                }
+                            ]
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "revision": {
+                    "type": "string"
+                },
+                "platform": {
+                    "type": "string"
+                },
+                "language": {
+                    "$ref": "#/definitions/language"
+                },
+                "statement": {
+                    "$ref": "#/definitions/statementref"
+                },
+                "extensions": {
+                    "$ref": "#/definitions/extensions"
+                }
+            },
+            "additionalProperties": false
+        },
         "activity" : {
             "type": "object",
             "required": ["id"],
@@ -418,6 +421,10 @@
                 "^[a-zA-Z][a-zA-Z+.-]*:": {}
             },
             "additionalProperties": false
+        },
+        "language": {
+            "type": "string",
+            "pattern": "^(([a-zA-Z]{2,8}((-[a-zA-Z]{3}){0,3})(-[a-zA-Z]{4})?((-[a-zA-Z]{2})|(-\\d{3}))?(-[a-zA-Z\\d]{4,8})*(-[a-zA-Z\\d](-[a-zA-Z\\d]{1,8})+)*)|x(-[a-zA-Z\\d]{1,8})+|en-GB-oed|i-ami|i-bnn|i-default|i-enochian|i-hak|i-klingon|i-lux|i-mingo|i-navajo|i-pwn|i-tao|i-tsu|i-tay|sgn-BE-FR|sgn-BE-NL|sgn-CH-DE)$"
         },
         "languagemap": {
             "type": "object",
