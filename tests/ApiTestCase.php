@@ -50,8 +50,6 @@ abstract class ApiTestCase extends TestCase
      * @return \Slim\Http\Response
      */
 
-    private static $app;
-
     private $request;
     private $response;
 
@@ -72,9 +70,6 @@ abstract class ApiTestCase extends TestCase
 
         Bootstrap::unlock();
         Bootstrap::reset();
-        // boot app
-        $boot = Bootstrap::factory(Bootstrap::Web);
-        self::$app = $boot->bootWebApp();
 
         error_reporting($level);
     }
@@ -87,13 +82,6 @@ abstract class ApiTestCase extends TestCase
     {
         Bootstrap::unlock();
         Bootstrap::reset();
-        // shutdown app
-        self::$app = null;
-    }
-
-    protected function app()
-    {
-        return self::$app;
     }
 
     protected function lastRequest()
@@ -135,6 +123,12 @@ abstract class ApiTestCase extends TestCase
         $this->request = null;
         $this->response = null;
 
+        // boot app
+        Bootstrap::unlock();
+        Bootstrap::reset();
+        $boot = Bootstrap::factory(Bootstrap::Web);
+        $app = $boot->bootWebApp();
+
         $env = [
             'REQUEST_METHOD' => $method,
             'REQUEST_URI' => $uri
@@ -173,8 +167,11 @@ abstract class ApiTestCase extends TestCase
             $request->getBody()->write($body);
         }
 
+
         // run app
-        $response = $this->app()->process($request, $response);
+        ob_start();
+        $response = $app->process($request, $response);
+        ob_get_clean();
 
         // handle response
         $this->request = $request;
@@ -186,7 +183,12 @@ abstract class ApiTestCase extends TestCase
     protected function createBasicToken($name, $email, $key, $secret, $permissions) {
         $expiresAt = null;
 
-        $container = $this->app()->getContainer();
+        Bootstrap::unlock();
+        Bootstrap::reset();
+        $boot = Bootstrap::factory(Bootstrap::Web);
+        $app = $boot->bootWebApp();
+
+        $container = $app->getContainer();
         $user = new UserAdmin($container);
         $auth = new AuthAdmin($container);
 
@@ -197,7 +199,7 @@ abstract class ApiTestCase extends TestCase
             $this->user = $user->addUser($name, 'test account', $email, $secret, $perms);
         }
 
-        // always delete token
+        // (re) create token
         $auth->deleteToken($key);
         $this->token = $auth->addToken($name, 'test account', $expiresAt, $this->user, $perms, $key, $secret);
     }
