@@ -505,7 +505,7 @@ class Statement extends Provider implements StatementInterface, SchemaInterface
             $referencedStatement = $this->_getById($referencedStatementId);
 
             if (version_compare($version , '1.0.3') < 0) {
-                if (null === $requestedStatement) {
+                if (null === $referencedStatement) {
                     throw new AdapterException('Voided statement does not exist!', Controller::STATUS_BAD_REQUEST);
                 }
             }
