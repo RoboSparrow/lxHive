@@ -13,6 +13,7 @@ cache/*
 
 # data
 data/*
+mongodb/*
 
 # doc generator
 sami.phar
