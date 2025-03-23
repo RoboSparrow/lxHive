@@ -440,7 +440,8 @@ class Statement extends Provider implements StatementInterface, SchemaInterface
 
     /**
      * {@inheritDoc}
-     * // TODO 0.11.x make this rather private and remove from interface
+     * TODO make this rather private and remove from interface
+     * TODO break down itno smaller units and separate validation
      */
     public function transformForInsert($statementObject)
     {
@@ -482,11 +483,17 @@ class Statement extends Provider implements StatementInterface, SchemaInterface
         $statementDocument->convertExtensionKeysToUnicode();
         $statementDocument->setDefaultId();
         $statementDocument->legacyContextActivities();
+
+        // referenced statement
+
+        $referencedStatementId = null;
+        $referencedStatement = null;
+
         if ($statementDocument->isReferencing()) {
-            // Copy values of referenced statement chain inside current statement for faster query-ing
-            // (space-time tradeoff)
+
             $referencedStatementId = $statementDocument->getReferencedStatementId();
             $referencedStatement = $this->_getById($referencedStatementId);
+
             // #244 => 1.0.3: There is no requirement for the LRS to validate that the UUID matches a Statement that exists.
             if ($referencedStatement) {
                 $referencedStatement = new \API\Document\Statement($referencedStatement);
@@ -498,15 +505,23 @@ class Statement extends Provider implements StatementInterface, SchemaInterface
                 $existingReferences[] = $referencedStatement->getStatement();
                 $statementDocument->setReferences($existingReferences);
             }
+
         }
-        //$statements[] = $statementDocument->toArray();
-        if ($statementDocument->isVoiding()) {
+
+        // voiding statement
+
+        if ($statementDocument->hasVoided()) {
+
+            if (!$statementDocument->isReferencing()) {
+                throw new AdapterException('Voiding statement does not use object type "StatementRef"', Controller::STATUS_BAD_REQUEST);
+            }
+
             $referencedStatementId = $statementDocument->getReferencedStatementId();
             $referencedStatement = $this->_getById($referencedStatementId);
 
             if (version_compare($version , '1.0.3') < 0) {
                 if (null === $referencedStatement) {
-                    throw new AdapterException('Voided statement does not exist!', Controller::STATUS_BAD_REQUEST);
+                    throw new AdapterException('Voiding statement: voided statement does not exist!', Controller::STATUS_BAD_REQUEST);
                 }
             }
             // #244 => 1.0.3: There is no requirement for the LRS to validate that the UUID matches a Statement that exists.
@@ -520,7 +535,11 @@ class Statement extends Provider implements StatementInterface, SchemaInterface
 
                 $storage->update(self::COLLECTION_NAME, $expression, $referencedStatement);
             }
+
         }
+
+        // activity
+
         if ($this->getAuth()->hasPermission('define')) {
             $activities = $statementDocument->extractActivities();
             if (count($activities) > 0) {

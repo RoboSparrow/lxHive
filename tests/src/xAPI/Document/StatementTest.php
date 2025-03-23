@@ -12,6 +12,7 @@ class StatementTest extends TestCase
     public function testIsVoiding()
     {
         $doc = new StatementDocument(null);
+        $this->assertFalse($doc->hasVoided(), 'empty');
         $this->assertFalse($doc->isVoiding(), 'empty');
 
         // --
@@ -34,11 +35,13 @@ class StatementTest extends TestCase
         }');
 
         $doc = new StatementDocument($statement);
-        $this->assertFalse($doc->isVoiding() ,'verb: not voided');
+        $this->assertFalse($doc->hasVoided(), 'verb: not voided');
+        $this->assertFalse($doc->isVoiding(), 'verb: not voided');
 
         // --
 
         $vid = 'https://adlnet.gov/expapi/verbs/voided';
+        $sid = Uuid::uuid4()->toString();
         $statement = json_decode('{
             "statement": {
                 "actor": {
@@ -48,13 +51,14 @@ class StatementTest extends TestCase
                     "id": "'.$vid.'"
                 },
                 "object": {
-                    "id": "https://adlnet.gov/expapi/objects/something",
+                    "id": "http://lxhive.com/activities/something"
                 }
             }
         }');
 
         $doc = new StatementDocument($statement);
-        $this->assertFalse($doc->isVoiding() ,'object: not StatementRef');
+        $this->assertTrue($doc->hasVoided(), 'object is no no StatementRef'); // !!!
+        $this->assertFalse($doc->isVoiding(), 'object is no no StatementRef');
 
         // --
 
@@ -76,6 +80,7 @@ class StatementTest extends TestCase
         }');
 
         $doc = new StatementDocument($statement);
+        $this->assertTrue($doc->hasVoided() ,'verb: http voided');
         $this->assertTrue($doc->isVoiding() ,'verb: http voided');
 
         // --
@@ -98,6 +103,7 @@ class StatementTest extends TestCase
         }');
 
         $doc = new StatementDocument($statement);
+        $this->assertTrue($doc->hasVoided() ,'verb: https voided');
         $this->assertTrue($doc->isVoiding() ,'verb: https voided');
     }
 

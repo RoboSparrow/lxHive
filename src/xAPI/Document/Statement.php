@@ -167,13 +167,12 @@ class Statement extends Document
         }
     }
 
-    public function isVoiding()
+    public function hasVoided()
     {
         $verbId = (isset($this->data->statement->verb->id)) ? $this->data->statement->verb->id : '';
         $verbId = preg_replace('(^https?://)', '', $verbId);
-        $objectType = (isset($this->data->statement->object->objectType)) ? $this->data->statement->object->objectType : '';
 
-        return ($verbId === 'adlnet.gov/expapi/verbs/voided' && $objectType === 'StatementRef');
+        return ($verbId === 'adlnet.gov/expapi/verbs/voided');
     }
 
     public function isReferencing()
@@ -184,6 +183,11 @@ class Statement extends Document
         } else {
             return false;
         }
+    }
+
+    public function isVoiding()
+    {
+        return ($this->hasVoided() && $this->isReferencing());
     }
 
     public function getReferencedStatementId()
