@@ -115,8 +115,7 @@ class ExtendedQuery implements ExtensionInterface
      */
     protected function getResource($request, $response)
     {
-        $versionString = $this->getContainer()->get('version')->generateClassNamespace();
-        $resourceName = __NAMESPACE__.'\\Controller\\'.$versionString.'\\ExtendedQuery';
+        $resourceName = __NAMESPACE__.'\\Controller\\V10\\ExtendedQuery';
         $resource = new $resourceName($this->getContainer(), $request, $response);
 
         return $resource;

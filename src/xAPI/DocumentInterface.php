@@ -30,7 +30,7 @@ interface DocumentInterface extends \JsonSerializable
      * Constructor
      *
      * @param array $data xAPI data
-     * @param string $documentState EUNUM string of i/o state of the document (i.e 'TRUSTED', 'UNTRUSTED', etc..)
+     * @param enum $documentState: API\DocumentState::TRUSTED, API\DocumentState::UNTRUSTED', etc..
      * @param string $version xAPI version
      * @return void
      */
