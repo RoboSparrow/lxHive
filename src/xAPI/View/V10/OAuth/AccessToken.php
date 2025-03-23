@@ -26,8 +26,6 @@ namespace API\View\V10\OAuth;
 
 use API\View;
 
-//use API\Document\Statement as StatementDocument; Re-do later
-
 class AccessToken extends View
 {
     public function render($accessTokenDocument)

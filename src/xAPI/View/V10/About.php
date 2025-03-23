@@ -26,8 +26,6 @@ namespace API\View\V10;
 
 use API\View;
 
-//use API\Document\Statement as StatementDocument; Re-do later
-
 class About extends View
 {
     public function render()
