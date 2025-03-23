@@ -48,7 +48,6 @@ use API\Middleware\XapiHeadersMiddleware;
 use API\Middleware\XapiLegacyRequestMiddleware;
 
 use API\Util\Collection;
-use API\Util\Versioning;
 use API\Console\Application as CliApp;
 
 use API\Service\Log as LogService;
@@ -502,30 +501,8 @@ class Bootstrap
             return $authService;
         };
 
-        // Version
-        $container['version'] = function ($container) {
-            if ($container['request']->isOptions() || $container['request']->getUri()->getPath() === '/about' || $container['request']->getUri()->getPath() === '/oauth') {
-                $versionString = Config::get(['xAPI', 'latest_version']);
-            } else {
-                $versionString = $container['request']->getHeaderLine('X-Experience-API-Version');
-            }
-
-            if (!$versionString) {
-                throw new HttpException('X-Experience-API-Version header missing.', Controller::STATUS_BAD_REQUEST);
-            }
-
-            try {
-                $version = Versioning::fromString($versionString);
-            } catch (\InvalidArgumentException $e) {
-                throw new HttpException('X-Experience-API-Version header invalid.', Controller::STATUS_BAD_REQUEST);
-            }
-
-            if (!in_array($versionString, Config::get(['xAPI', 'supported_versions']))) {
-                throw new HttpException('X-Experience-API-Version is not supported.', Controller::STATUS_BAD_REQUEST);
-            }
-
-            return $version;
-        };
+        // X-Experience-API-Version, populated by router
+        $container['xapi-version'] = '';
 
         return $container;
     }
@@ -559,7 +536,7 @@ class Bootstrap
     public function bootWebApp()
     {
         if (!self::$containerInstantiated) {
-            throw new AppInitException('Bootrstrap; You must initiate the Bootstrapper using the static factory!');
+            throw new AppInitException('Bootstrap: You must initiate the Bootstrapper using the static factory!');
         }
 
         $container = self::$containerInstance;
@@ -616,14 +593,31 @@ class Bootstrap
         foreach ($routes as $pattern => $route) {
             // register single route with methods and controller
 
-            $app->map($route['methods'], $pattern, function ($request, $response, $args) use ($container, $route) {
+            $app->map($route['methods'], $pattern, function ($request, $response, $args) use ($container, $pattern, $route) {
 
+                $method = strtolower($request->getMethod());
                 $resource = Controller::load($container, $request, $response, $route['controller']);
+
+                $version = $request->getHeaderLine('X-Experience-API-Version');
+                if ($route['module'] === 'xAPI') {
+                    // strict validation for xapi requests
+                    if ($method != 'options' && $pattern != '/about') {
+                        if (!$version) {
+                            return $resource->error(Controller::STATUS_BAD_REQUEST, 'X-Experience-API-Version header missing.');
+                        }
+                        $supported_versions = Config::get(['xAPI', 'supported_versions'], []);
+                        if (!in_array($version, $supported_versions)) {
+                            return $resource->error(Controller::STATUS_BAD_REQUEST, 'X-Experience-API-Version is not supported.');
+                        }
+                    }
+                }
+                $container['xapi-version'] = ($version) ? $version : Config::get(['xAPI', 'latest_version']);
+
+
                 // We could also throw an Exception on load and catch it here...but that might have a performance penalty? It is definitely a cleaner, more proper option.
                 if ($resource instanceof \Psr\Http\Message\ResponseInterface) {
                     return $resource;
                 } else {
-                    $method = strtolower($request->getMethod());
                     // HEAD method needs to respond exactly the same as GET method (minus the body)
                     // Body will be removed automatically by Slim
                     if ($method === 'head') {
