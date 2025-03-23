@@ -411,15 +411,26 @@ class Statement extends Provider implements StatementInterface, SchemaInterface
     }
 
     /**
-     * {@inheritDoc}
+     * Get StatementResult by id. Allow null return.
+     *
+     * @return StatementResult|null
      */
-    public function getById($statementId)
+    private function _getById($statementId)
     {
         $storage = $this->getContainer()->get('storage');
         $expression = $storage->createExpression();
         $expression->where('statement.id', $statementId);
         $requestedStatement = $storage->findOne('statements', $expression);
 
+        return $requestedStatement;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getById($statementId)
+    {
+        $requestedStatement = $this->_getById($statementId);
         if (null === $requestedStatement) {
             throw new AdapterException('Requested statement does not exist!', Controller::STATUS_BAD_REQUEST);
         }
@@ -434,6 +445,7 @@ class Statement extends Provider implements StatementInterface, SchemaInterface
     public function transformForInsert($statementObject)
     {
         $storage = $this->getContainer()->get('storage');
+        $version = $this->getContainer()->get('xapi-version');
 
         $uri = $this->getContainer()->get('request')->getUri();
         $attachmentBase = $uri->getBaseUrl().Config::get(['filesystem', 'exposed_url']);
@@ -453,6 +465,7 @@ class Statement extends Provider implements StatementInterface, SchemaInterface
         }
 
         $statementDocument = new \API\Document\Statement();
+        $statementDocument->setVersion($version);
         // Overwrite authority - unless it's a super token and manual authority is set
         if (!($this->getAuth()->hasPermission('super') && isset($statementObject->{'authority'})) || !isset($statementObject->{'authority'})) {
             $statementObject->{'authority'} = $this->getAccessToken()->generateAuthority();
@@ -473,28 +486,40 @@ class Statement extends Provider implements StatementInterface, SchemaInterface
             // Copy values of referenced statement chain inside current statement for faster query-ing
             // (space-time tradeoff)
             $referencedStatementId = $statementDocument->getReferencedStatementId();
-            $referencedStatement = $this->getById($referencedStatementId);
-            $referencedStatement = new \API\Document\Statement($referencedStatement);
+            $referencedStatement = $this->_getById($referencedStatementId);
+            // #244 => 1.0.3: There is no requirement for the LRS to validate that the UUID matches a Statement that exists.
+            if ($referencedStatement) {
+                $referencedStatement = new \API\Document\Statement($referencedStatement);
 
-            $existingReferences = [];
-            if (null !== $referencedStatement->getReferences()) {
-                $existingReferences = $referencedStatement->getReferences();
+                $existingReferences = [];
+                if (null !== $referencedStatement->getReferences()) {
+                    $existingReferences = $referencedStatement->getReferences();
+                }
+                $existingReferences[] = $referencedStatement->getStatement();
+                $statementDocument->setReferences($existingReferences);
             }
-            $existingReferences[] = $referencedStatement->getStatement();
-            $statementDocument->setReferences($existingReferences);
         }
         //$statements[] = $statementDocument->toArray();
         if ($statementDocument->isVoiding()) {
             $referencedStatementId = $statementDocument->getReferencedStatementId();
-            $referencedStatement = $this->getById($referencedStatementId);
-            $referencedStatement = new \API\Document\Statement($referencedStatement);
+            $referencedStatement = $this->_getById($referencedStatementId);
 
-            $this->validateVoidedStatementNotVoiding($referencedStatement);
-            $referencedStatement->setVoided(true);
-            $expression = $storage->createExpression();
-            $expression->where('statement.id', $referencedStatementId);
+            if (version_compare($version , '1.0.3') < 0) {
+                if (null === $requestedStatement) {
+                    throw new AdapterException('Voided statement does not exist!', Controller::STATUS_BAD_REQUEST);
+                }
+            }
+            // #244 => 1.0.3: There is no requirement for the LRS to validate that the UUID matches a Statement that exists.
+            if ($referencedStatement) {
+                $referencedStatement = new \API\Document\Statement($referencedStatement);
 
-            $storage->update(self::COLLECTION_NAME, $expression, $referencedStatement);
+                $this->validateVoidedStatementNotVoiding($referencedStatement);
+                $referencedStatement->setVoided(true);
+                $expression = $storage->createExpression();
+                $expression->where('statement.id', $referencedStatementId);
+
+                $storage->update(self::COLLECTION_NAME, $expression, $referencedStatement);
+            }
         }
         if ($this->getAuth()->hasPermission('define')) {
             $activities = $statementDocument->extractActivities();

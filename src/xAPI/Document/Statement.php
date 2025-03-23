@@ -24,11 +24,11 @@
  * Projected Usage
  *
  *  POST/PUT:
- *  $document = new \API\Document\Statement($parsedJson, 'UNTRUSTED', '1.0.3');
+ *  $document = new \API\Document\Statement($parsedJson, \API\DocumentState::UNTRUSTED, '1.0.3');
  *  $statement = $document->validate()->normalize()->document(); // validated and normalized stdClass, ready for storage, changes the state with each chain ['UNTRUSTED->VALIDTED->READY]
  *
  *  REST response
- *  $document = new \API\Document\Statement($mongoDocument, 'TRUSTED', '1.0.3');
+ *  $document = new \API\Document\Statement($mongoDocument, \API\DocumentState::TRUSTED, '1.0.3');
  *  $document->validate()->normalize(); //deals with minor incositencies, will in future also remove meta properties
  *  $json = json_encode($document);
  *
@@ -72,64 +72,12 @@ class Statement extends Document
 
     public function validate()
     {
-        // required check props, additional props: basic actor, object, result
-        /*$validator = new Validator\Statement($this->document->actor, $this->state, $this->version);
-        $validator->validate($this->document, $this->mode); //throws Exceptions
-
-        $this->actor = new Actor($this->document->actor, $this->state, $this->version);
-        $this->document->actor = $this->actor->document();
-
-        $this->verb = new Verb($this->document->result, $this->state, $this->version);
-        $this->document->verb = $this->verb->document();
-
-        $this->object = new Object_($this->document->object, $this->state, $this->version);
-        $this->document->object = $this->object->document();
-
-        // optional props
-        if(isset($this->document->result)){
-            $this->result = new Result($this->document->result, $this->state, $this->version);
-            $this->document->result = $this->result->document();
-        }
-
-        return $this;*/
     }
 
     public function normalize()
     {
-        // Actually there is something to do here - add metadata!
-        // For example, adding the mongo_timestamp
-        // Maybe also adding the version in a version key!
-
-        // nothing to do here sub modules take care
-        // @Joerg: What are submodules?
         return $this;
     }
-
-    /*public function get($key)
-    {
-        if (isset($this->data['statement'][$key])) {
-            return $this->data['statement'][$key];
-        }
-    }
-
-    public function set($key, $value)
-    {
-        $this->data['statement'][$key] = $value;
-    }
-
-    public function getStatement()
-    {
-        if (isset($this->data['statement->)) {
-            return $this->data['statement->;
-        }
-    }
-
-    public function getMetadata()
-    {
-        if (isset($this->data['metadata->)) {
-            return $this->data['metadata->;
-        }
-    }*/
 
     public function getId()
     {
@@ -221,15 +169,11 @@ class Statement extends Document
 
     public function isVoiding()
     {
-        if (isset($this->data->statement->verb->id)
-            && ($this->data->statement->verb->id === 'http://adlnet.gov/expapi/verbs/voided')
-            && isset($this->data->statement->object->objectType)
-            && ($this->data->statement->object->objectType === 'StatementRef')
-        ) {
-            return true;
-        } else {
-            return false;
-        }
+        $verbId = (isset($this->data->statement->verb->id)) ? $this->data->statement->verb->id : '';
+        $verbId = preg_replace('(^https?://)', '', $verbId);
+        $objectType = (isset($this->data->statement->object->objectType)) ? $this->data->statement->object->objectType : '';
+
+        return ($verbId === 'adlnet.gov/expapi/verbs/voided' && $objectType === 'StatementRef');
     }
 
     public function isReferencing()
@@ -419,36 +363,6 @@ class Statement extends Document
             $activity = $this->data->statement->object;
             $activities[] = $activity;
         }
-        /* Commented out for now due to performance reasons
-        // Context activities
-        if (isset($this->_data['statement']['context']['contextActivities'])) {
-            if (isset($this->_data['statement']['context']['contextActivities']['parent'])) {
-                foreach ($this->_data['statement']['context']['contextActivities']['parent'] as $singleActivity) {
-                    $activities[] = $singleActivity;
-                }
-            }
-            if (isset($this->_data['statement']['context']['contextActivities']['category'])) {
-                foreach ($this->_data['statement']['context']['contextActivities']['category'] as $singleActivity) {
-                    $activities[] = $singleActivity;
-                }
-            }
-            if (isset($this->_data['statement']['context']['contextActivities']['grouping'])) {
-                foreach ($this->_data['statement']['context']['contextActivities']['grouping'] as $singleActivity) {
-                    $activities[] = $singleActivity;
-                }
-            }
-            if (isset($this->_data['statement']['context']['contextActivities']['other'])) {
-                foreach ($this->_data['statement']['context']['contextActivities']['other'] as $singleActivity) {
-                    $activities[] = $singleActivity;
-                }
-            }
-        }
-        // SubStatement activity check
-        if (isset($this->_data['statement']['object']['objectType']) && $this->_data['statement']['object']['objectType'] === 'SubStatement') {
-            if ((isset($this->_data['statement']['object']['object']['objectType']) && $this->_data['statement']['object']['object']['objectType'] === 'Activity') || !isset($this->_data['statement']['object']['object']['objectType']) {
-                $activities[] = $this->_data['statement']['object']['object'];
-            }
-        }*/
         return $activities;
     }
 }

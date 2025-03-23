@@ -30,7 +30,7 @@ use API\Config;
 use JsonSchema;
 use API\Validator\JsonSchema\Constraints\Factory as Factory;
 
-use API\HttpException as Exception;
+use API\HttpException;
 
 
 class Validator
@@ -125,7 +125,6 @@ class Validator
      */
     public function validateRequest()
     {
-        $version = $this->getContainer()->get('version');//run version container
     }
 
     /**
@@ -140,7 +139,7 @@ class Validator
     protected function throwErrors($message, $errors)
     {
         $errors = (array) $errors;
-        throw new Exception($message, Controller::STATUS_BAD_REQUEST, $errors);
+        throw new HttpException($message, Controller::STATUS_BAD_REQUEST, $errors);
     }
 
     /**
@@ -165,6 +164,6 @@ class Validator
         if ($this->debug) {
             $errors['debug'] = $this->debugData;
         }
-        throw new Exception($message, Controller::STATUS_BAD_REQUEST, $errors);
+        throw new HttpException($message, Controller::STATUS_BAD_REQUEST, $errors);
     }
 }
