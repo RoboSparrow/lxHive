@@ -34,6 +34,9 @@ use Psr\Http\Message\ServerRequestInterface;
 
 use Slim\Http\Body;
 
+use API\Config;
+use API\Util\Date as DateUtils;
+
 class ErrorHandler
 {
     private $logger = null;
@@ -89,10 +92,17 @@ class ErrorHandler
         $body = new Body(fopen('php://temp', 'r+'));
         $body->write($out);
 
+
+        $date = DateUtils::dateTimeToISO8601(DateUtils::dateTimeExact());
+        $version = Config::get(['xAPI', 'latest_version']);
+
         // TODO text/html for oauth
         return $response
             ->withStatus(($statusCode > 99 && $statusCode < 600) ? $statusCode : 500)
             ->withHeader('Content-Type', 'application/json')
+            ->withHeader('X-Experience-API-Consistent-Through', 'application/json')
+            ->withHeader('X-Experience-API-Version', $version)
+            ->withHeader('X-Experience-API-Consistent-Through', $date)
             ->withBody($body);
     }
 
