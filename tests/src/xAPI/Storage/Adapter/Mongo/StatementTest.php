@@ -5,10 +5,11 @@ use Tests\MongoTestCase;
 
 use API\Bootstrap;
 use API\Storage\Adapter\Mongo\Statement;
+use API\Document\Statement as StatementDocument;
 
 class StatementTest extends MongoTestCase
 {
-    private $collection;
+    private $modelection;
 
     public function setUp(): void
     {
@@ -17,8 +18,8 @@ class StatementTest extends MongoTestCase
 
     public function testGetIndexes()
     {
-        $coll = new Statement(Bootstrap::getContainer());
-        $indexes = $coll->getIndexes();
+        $model = new Statement(Bootstrap::getContainer());
+        $indexes = $model->getIndexes();
 
         $this->assertTrue(is_array($indexes));
     }
@@ -30,8 +31,8 @@ class StatementTest extends MongoTestCase
     {
         $this->dropCollection($this->collection);
 
-        $coll = new Statement(Bootstrap::getContainer());
-        $coll->install();
+        $model = new Statement(Bootstrap::getContainer());
+        $model->install();
         // has passed without exception
 
         $indexes = $this->command([
@@ -40,7 +41,7 @@ class StatementTest extends MongoTestCase
 
         $configured = array_map(function($i) {
             return $i['name'];
-        }, $coll->getIndexes());
+        }, $model->getIndexes());
 
         $installed = array_map(function($i) {
             return $i->name;

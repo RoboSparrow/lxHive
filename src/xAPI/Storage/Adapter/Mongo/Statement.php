@@ -465,14 +465,27 @@ class Statement extends Provider implements StatementInterface, SchemaInterface
             }
         }
 
+        // pre-validation
+        if (isset($statementObject->{'timestamp'})) {
+            $this->validateTimestamp($statementObject->{'timestamp'});
+        }
+
         $statementDocument = new \API\Document\Statement();
         $statementDocument->setVersion($version);
+
+        // Object
+
         // Overwrite authority - unless it's a super token and manual authority is set
         if (!($this->getAuth()->hasPermission('super') && isset($statementObject->{'authority'})) || !isset($statementObject->{'authority'})) {
             $statementObject->{'authority'} = $this->getAccessToken()->generateAuthority();
         }
         $statementDocument->setStatement($statementObject);
+
+        // TODO move to JsonSchema, if possible
+        $this->validateStatementObjectDefinition($statementDocument);
+
         // Dates
+
         $currentDate = Util\Date::dateTimeExact();
         $statementDocument->normalizeExistingIds();
         $statementDocument->setVoided(false);
@@ -685,9 +698,63 @@ class Statement extends Provider implements StatementInterface, SchemaInterface
         }
     }
 
-    private function validateVoidedStatementNotVoiding($referencedStatement)
+    private function validateTimestamp($timestamp)
     {
-        if ($referencedStatement->isVoiding()) {
+        // ISO 8601 Timestamp are defined very broadly and a specific validation is a can of worms
+        // We just check for any parsable format
+        try {
+            $dt = new \DateTime($timestamp);
+        } catch (\Exception $e) {
+            throw new AdapterException('Invalid \'timestamp\' value', Controller::STATUS_BAD_REQUEST);
+        }
+    }
+
+    // TODO migrate to JsonSchema
+    private function validateStatementObjectDefinition($document)
+    {
+        $definition = $document->getStatementObjectDefinition();
+        if (!$definition || !(array)$definition) {
+            // empty definitions are allowed
+            return;
+        }
+
+        $activity = $document->isStatementObjectTypeActivity();
+        if (!$activity) {
+            return;
+        }
+
+        // activities of type cmi.interaction
+
+        if (!empty($definition->correctResponsesPattern)) {
+            if (empty($definition->interactionType)) {
+                throw new AdapterException('Activity Definition uses correctResponsesPattern without \'interactionType\' property (in statement.object.definition)', Controller::STATUS_BAD_REQUEST);
+            }
+            return;
+        }
+
+        if (empty($definition->interactionType)) {
+            return;
+        }
+
+        $interactionTypes = ['true-false', 'choice', 'fill-in', 'long-fill-in', 'matching', 'performance', 'sequencing', 'likert', 'numeric', 'other'];
+
+        if (!in_array($definition->interactionType, $interactionTypes)) {
+            throw new AdapterException('Property \'interactionType\' values must be one of ' . join(', ', $interactionTypes) . ' (in statement.object.definition)', Controller::STATUS_BAD_REQUEST);
+        }
+
+        $interactionComponents = ['choices', 'scale', 'source', 'targe', 'steps'];
+        foreach($interactionComponents as $component) {
+            if (!empty($definition->{$component})) {
+                return;
+            }
+        }
+
+        throw new AdapterException('Activities of type cmi.interaction require atl east one of \''.join(', ', $interactionComponents).'\' (in statement.object.definition)', Controller::STATUS_BAD_REQUEST);
+    }
+
+    private function validateVoidedStatementNotVoiding($referencedDocument)
+    {
+        if ($referencedDocument->isVoiding()) {
             throw new AdapterException('Voiding statements cannot be voided.', Controller::STATUS_CONFLICT);
         }
     }

@@ -133,7 +133,7 @@ class ErrorHandler
                     'message' => $exception->getMessage(),
                     'file' => $exception->getFile(),
                     'line' => $exception->getLine(),
-                    'trace' => explode("\n", $exception->getTraceAsString()),
+                    'trace' => ($statusCode > 499) ? explode("\n", $exception->getTraceAsString()) : null,
                 ];
             } while ($exception = $exception->getPrevious());
         }

@@ -167,6 +167,28 @@ class Statement extends Document
         }
     }
 
+    /**
+     * Checks whether an statement object is of objectType "Actitivty"
+     * @see https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Data.md#2441-when-the-objecttype-is-activity
+     *
+     * @return bool
+     */
+    public function isStatementObjectTypeActivity()
+    {
+        $object = $this->data->statement->object;
+        if (!isset($object->objectType)) {
+            return false;
+        }
+        return ($object->objectType === 'Activity');
+    }
+
+
+    public function getStatementObjectDefinition()
+    {
+        $object = $this->data->statement->object;
+        return (isset($object->definition))? $object->definition : null;
+    }
+
     public function hasVoided()
     {
         $verbId = (isset($this->data->statement->verb->id)) ? $this->data->statement->verb->id : '';
