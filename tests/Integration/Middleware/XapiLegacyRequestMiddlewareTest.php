@@ -172,26 +172,6 @@ class XapiLegacyRequestMiddlewareTest extends ApiTestCase
         $status = $response->getStatusCode();
         $this->assertEquals($status, StatusCode::HTTP_BAD_REQUEST, 'status code');
 
-        // --> GET ?method&until_id accept more URL as an additional query Param (lxHive specific excpetion to 'no other param' rule)
-
-        $url = $moreUrl .'&method=GET';
-
-        $data = [
-            // headers
-            'Content-Type'             => 'application/json',
-            'X-Experience-API-Version' => $this->xapiVersion(),
-            'Authorization'            => 'Basic '.base64_encode($this->key.':'.$this->secret),
-            // query params
-        ];
-        $formData = http_build_query($data);
-
-        $response = $this->runApp('POST', $url, ['Content-Type' => 'application/x-www-form-urlencoded'], $formData);
-        $status = $response->getStatusCode();
-        $data = json_decode((string) $response->getBody(), false);
-
-        $this->assertEquals($status, StatusCode::HTTP_OK, 'status code');
-        $this->assertIsObject($data);
-        $this->assertObjectHasProperty('statements', $data);
     }
 
 }

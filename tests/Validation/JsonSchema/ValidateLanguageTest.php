@@ -1,5 +1,5 @@
 <?php
-namespace Tests\Validation;
+namespace Tests\Validation\JsonSchema;
 
 use Tests\JsonSchemaTestCase;
 

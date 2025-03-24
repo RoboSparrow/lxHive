@@ -508,7 +508,7 @@ class Statement extends Provider implements StatementInterface, SchemaInterface
 
         }
 
-        // voiding statement
+        // voiding statement (requires of referenced statement)
 
         if ($statementDocument->hasVoided()) {
 
@@ -524,6 +524,7 @@ class Statement extends Provider implements StatementInterface, SchemaInterface
                     throw new AdapterException('Voiding statement: voided statement does not exist!', Controller::STATUS_BAD_REQUEST);
                 }
             }
+
             // #244 => 1.0.3: There is no requirement for the LRS to validate that the UUID matches a Statement that exists.
             if ($referencedStatement) {
                 $referencedStatement = new \API\Document\Statement($referencedStatement);

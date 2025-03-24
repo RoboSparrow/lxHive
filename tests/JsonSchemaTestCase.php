@@ -27,7 +27,7 @@ use JsonSchema\Validator;
 use JsonSchema\SchemaStorage;
 use JsonSchema\Constraints\Factory;
 
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 
 abstract class JsonSchemaTestCase extends TestCase
 {
@@ -38,7 +38,8 @@ abstract class JsonSchemaTestCase extends TestCase
 
     public function initSchema($fp = null): void
     {
-        $schemaFile = realpath(($fp) ? $fp : './src/xAPI/Validator/V10/Schema/Statements.json');
+        $appRoot = parent::getAppRoot();
+        $schemaFile = $appRoot . '/src/xAPI/Validator/V10/Schema/Statements.json';
 
         $this->assertFileExists($schemaFile);
         $this->assertIsObject(json_decode(file_get_contents($schemaFile)));

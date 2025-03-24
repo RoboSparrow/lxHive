@@ -1,9 +1,9 @@
 <?php
-namespace Tests\Validation;
+namespace Tests\Validation\JsonSchema;
 
 use Tests\JsonSchemaTestCase;
 
-class ValidateStatementRef extends JsonSchemaTestCase
+class ValidateStatementRefTest extends JsonSchemaTestCase
 {
 
     public function setUp(): void
@@ -14,7 +14,7 @@ class ValidateStatementRef extends JsonSchemaTestCase
     public function testStatement(): void
     {
         // @see https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Data.md#246-context
-        //  - all proprties in context are optional, so we need only "language"
+        //  - all properties in context are optional, so we need only "language"
         $tests = [
             [
                 'pass' => true,

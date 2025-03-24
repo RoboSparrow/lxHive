@@ -25,6 +25,7 @@ namespace Tests;
 
 use \PHPUnit\Framework\TestCase as BaseTestCase;
 
+use API\Config;
 use API\Bootstrap;
 
 abstract class TestCase extends BaseTestCase
@@ -33,10 +34,16 @@ abstract class TestCase extends BaseTestCase
      * Called before the first test of the test case class is run
      * Loads db config
      */
+
     public static function setUpBeforeClass(): void
     {
         Bootstrap::unlock();
         Bootstrap::reset();
         Bootstrap::factory(Bootstrap::Testing);
+    }
+
+    public static function getAppRoot(): string
+    {
+        return Config::get('appRoot', '');
     }
 }
