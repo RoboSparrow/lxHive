@@ -182,7 +182,6 @@ class Statement extends Document
         return ($object->objectType === 'Activity');
     }
 
-
     public function getStatementObjectDefinition()
     {
         $object = $this->data->statement->object;

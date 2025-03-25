@@ -465,11 +465,6 @@ class Statement extends Provider implements StatementInterface, SchemaInterface
             }
         }
 
-        // pre-validation
-        if (isset($statementObject->{'timestamp'})) {
-            $this->validateTimestamp($statementObject->{'timestamp'});
-        }
-
         $statementDocument = new \API\Document\Statement();
         $statementDocument->setVersion($version);
 
@@ -694,18 +689,7 @@ class Statement extends Provider implements StatementInterface, SchemaInterface
         unset($existingStatement->version);
         // Mismatch - return 409 Conflict
         if ($incomingStatement != $existingStatement) {
-            throw new AdapterException('An existing statement already exists with the same ID (' . $existingStatement->id . ') and is different from the one provided.', Controller::STATUS_CONFLICT);
-        }
-    }
-
-    private function validateTimestamp($timestamp)
-    {
-        // ISO 8601 Timestamp are defined very broadly and a specific validation is a can of worms
-        // We just check for any parsable format
-        try {
-            $dt = new \DateTime($timestamp);
-        } catch (\Exception $e) {
-            throw new AdapterException('Invalid \'timestamp\' value', Controller::STATUS_BAD_REQUEST);
+            throw new AdapterException('An existing statement already exists with the same ID ('.$existingStatement->id.') and is different from the one provided.', Controller::STATUS_CONFLICT);
         }
     }
 
