@@ -1,5 +1,5 @@
 <?php
-namespace Tests\API\validator;
+namespace Tests\API\Validator;
 
 use Tests\TestCase;
 
@@ -18,8 +18,7 @@ class ValidatorTest extends TestCase
         $v =  new Validator(new Container());
         $sv = $v->createSchemaValidator($factory);
 
-        $this->assertInstanceOf(JsonSchema\Validator::class, $sv);
-        $this->assertInstanceOf(JsonSchema\Validator::class, $sv);
-        $this->assertTrue(method_exists($sv, 'isValid1'));
+        $this->assertInstanceOf(JsonSchema\Validator::class, $sv, 'extends JsonSchema\Validator');
+        $this->assertTrue(method_exists($sv, 'isValid'), 'extends JsonSchema\Validator');
     }
 }
