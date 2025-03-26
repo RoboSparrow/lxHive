@@ -103,22 +103,6 @@ class FormatConstraint extends JsonSchemaConstraint
                 }
             break;
 
-            case 'php-datetime':
-                // ISO 8601 Timestamp are defined very broadly and a specific validation is a can of worms
-                // We just check for any parsable format
-                // Note that ISO 8601 DURATIONS can't be reliably validated with the respective PHP new \DateInterval($duration) call,
-                // since it failes to parse duration strings like 'P3Y1M29DT4H35M59.14S' (used by lrs-conformance-test-suite)
-                try {
-                    $dt = new \DateTime($element);
-                } catch (\Exception $e) {
-                    $this->addError(ConstraintError::FORMAT_DATE_TIME(), $path, [
-                        'value' => $element,
-                        'format' => $schema->format,
-                        'reason'=>   'Invalid UUID',
-                    ]);
-                }
-            break;
-
             default:
                 parent::check($element, $schema, $path, $i);
             break;

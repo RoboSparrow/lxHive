@@ -633,7 +633,10 @@ class Statement extends Provider implements StatementInterface, SchemaInterface
         // Check statementId
         if (isset($statementObject->id)) {
             // Check for match
-            $this->validateStatementIdMatch(Util\xAPI::normalizeUuid($statementObject->id), Util\xAPI::normalizeUuid($parameters['statementId']));
+            $this->validateStatementIdMatch(
+                Util\xAPI::normalizeUuid($statementObject->id),
+                Util\xAPI::normalizeUuid($parameters['statementId'])
+            );
         } else {
             $statementObject->id = Util\xAPI::normalizeUuid($parameters['statementId']);
         }

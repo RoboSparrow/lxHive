@@ -125,7 +125,7 @@ class StatementTest extends TestCase
         }');
 
         $doc = new StatementDocument($statement);
-        $this->assertTrue($doc->isStatementObjectTypeActivity() , 'object: is activity');
+        $this->assertTrue($doc->isStatementObjectTypeActivity(), 'object: is activity');
 
         // --
 
@@ -178,8 +178,8 @@ class StatementTest extends TestCase
         }');
 
         $doc = new StatementDocument($statement);
-        $this->assertTrue($doc->isStatementObjectTypeActivity() , 'object: is activity');
-        $this->assertTrue($doc->hasStatementObjectActivityDefinition() , 'object: has activity defintion');
+        $this->assertTrue($doc->isStatementObjectTypeActivity(), 'object: is activity');
+        $this->assertIsObject($doc->getStatementObjectDefinition(), 'object: has activity defintion');
 
         // --
 
@@ -211,8 +211,8 @@ class StatementTest extends TestCase
         }');
 
         $doc = new StatementDocument($statement);
-        $this->assertTrue($doc->isStatementObjectTypeActivity() , 'object: is activity');
-        $this->assertTrue($doc->hasStatementObjectActivityDefinition() , 'object: has activity defintion (choices)');
+        $this->assertTrue($doc->isStatementObjectTypeActivity(), 'object: is activity');
+        $this->assertIsObject($doc->getStatementObjectDefinition(), 'object: has activity defintion (choices)');
 
         // --
 
@@ -240,8 +240,8 @@ class StatementTest extends TestCase
         }');
 
         $doc = new StatementDocument($statement);
-        $this->assertTrue($doc->isStatementObjectTypeActivity() , 'object: is activity');
-        $this->assertFalse($doc->hasStatementObjectActivityDefinition() , 'object: object.definition is not an activity defintion ');
+        $this->assertTrue($doc->isStatementObjectTypeActivity(), 'object: is activity');
+        $this->assertIsObject($doc->getStatementObjectDefinition(), 'object: object.definition is not an activity defintion ');
 
         // --
 
@@ -271,8 +271,8 @@ class StatementTest extends TestCase
         }');
 
         $doc = new StatementDocument($statement);
-        $this->assertFalse($doc->isStatementObjectTypeActivity() , 'object: is activity');
-        $this->assertFalse($doc->hasStatementObjectActivityDefinition() , 'object: has activity defintion but is not of type "Activity"');
+        $this->assertFalse($doc->isStatementObjectTypeActivity(), 'object: is activity');
+        $this->assertNull($doc->getStatementObjectDefinition(), 'object: has activity defintion but is not of type "Activity"');
     }
 
 }

@@ -28,11 +28,11 @@ use API\Validator;
 
 class Statement extends Validator
 {
-    protected function validateBySchemaFragment($data, $fragment, $debug = false)
+    protected function validateBySchemaFragment($data, $fragment)
     {
         $fragment = ($fragment) ? '#'.$fragment : '';
 
-        return $this->validateSchema($data, 'file://'.__DIR__.'/Schema/Statements.json'.$fragment, $debug);
+        return $this->validateSchema($data, 'file://'.__DIR__.'/Schema/Statements.json'.$fragment);
     }
 
     // Handles the validation of GET /statements

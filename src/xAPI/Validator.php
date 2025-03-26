@@ -84,6 +84,8 @@ class Validator
      */
     public function validateSchema($data, $uri)
     {
+        $this->debugData = null;
+
         $schema = self::$schemaStorage->getSchema($uri);
         $validator = new JsonSchema\Validator(new Factory(self::$schemaStorage, null, JsonSchema\Constraints\Constraint::CHECK_MODE_TYPE_CAST));
         $validator->check($data, $schema);
