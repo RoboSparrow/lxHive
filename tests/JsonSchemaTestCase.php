@@ -23,51 +23,32 @@
  */
 namespace Tests;
 
-use JsonSchema\Validator;
-use JsonSchema\SchemaStorage;
-use JsonSchema\Constraints\Factory;
+use API\Bootstrap;
+use API\Container;
+use API\Validator;
 
 use Tests\TestCase;
 
 abstract class JsonSchemaTestCase extends TestCase
 {
 
-    private $schemaFile;
-    private $schemaStorage;
-    private $debugData = null;
-
-    public function initSchema($fp = null): void
+    public function setUp(): void
     {
-        $appRoot = parent::getAppRoot();
-        $schemaFile = $appRoot . '/src/xAPI/Validator/V10/Schema/Statements.json';
-
-        $this->assertFileExists($schemaFile);
-        $this->assertIsObject(json_decode(file_get_contents($schemaFile)));
-
-        $this->schemaFile = $schemaFile;
-        $this->schemaStorage = new SchemaStorage();
-        $this->debugData = null;
+        Bootstrap::reset();
+        Bootstrap::factory(Bootstrap::Testing, [
+            'debug' => true, // trigger extended validator error messages
+        ]);
     }
 
     public function validateSchema($data, $fragment = '')
     {
-        $this->debugData = null;
+        $schemaFile = 'file://'. $this->getAppRoot() . '/src/xAPI/Validator/V10/Schema/Statements.json';
 
-        $uri = 'file://'. $this->schemaFile . $fragment;
+        $validator = new Validator(new Container());
 
-        $schema = $this->schemaStorage->getSchema($uri);
-        $validator = new Validator(new Factory($this->schemaStorage));
-        $res = $validator->check($data, $schema);
+        $uri = $schemaFile.$fragment;
+        $res = $validator->validateSchema($data, $uri);
 
-        $this->debugData = [
-            'hasErrors' => count($validator->getErrors()),
-            'errors' => ($data) ? $validator->getErrors() : [],
-            'uri' => $uri,
-            'schema' => $schema,
-            'data' => $data,
-        ];
-
-        return $validator;
+        return $res;
     }
-
 }

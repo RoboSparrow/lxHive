@@ -6,11 +6,6 @@ use Tests\JsonSchemaTestCase;
 class ValidateMboxRefTest extends JsonSchemaTestCase
 {
 
-    public function setUp(): void
-    {
-        $this->initSchema();
-    }
-
     public function testMboxRef(): void
     {
         // @see https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Data.md#246-context

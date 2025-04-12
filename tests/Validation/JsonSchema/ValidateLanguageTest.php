@@ -6,11 +6,6 @@ use Tests\JsonSchemaTestCase;
 class ValidateLanguageTest extends JsonSchemaTestCase
 {
 
-    public function setUp(): void
-    {
-        $this->initSchema();
-    }
-
     public function testContextLanguage(): void
     {
         // @see https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Data.md#246-context

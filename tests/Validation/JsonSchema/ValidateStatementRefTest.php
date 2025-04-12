@@ -6,11 +6,6 @@ use Tests\JsonSchemaTestCase;
 class ValidateStatementRefTest extends JsonSchemaTestCase
 {
 
-    public function setUp(): void
-    {
-        $this->initSchema();
-    }
-
     public function testStatement(): void
     {
         // @see https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Data.md#246-context

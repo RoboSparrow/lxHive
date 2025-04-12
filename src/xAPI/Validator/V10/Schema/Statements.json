@@ -143,23 +143,7 @@
                     "type": "object",
                     "properties": {
                         "score": {
-                            "type": "object",
-                            "properties": {
-                                "scaled": {
-                                    "type": "number",
-                                    "minimum": 0,
-                                    "maximum": 1
-                                },
-                                "raw": {
-                                    "type": "number"
-                                },
-                                "min": {
-                                    "type": "number"
-                                },
-                                "max": {
-                                    "type": "number"
-                                }
-                            }
+                            "$ref": "#/definitions/score"
                         },
                         "success": {
                             "type": "boolean"
@@ -650,6 +634,25 @@
         "duration": {
             "type": "string",
             "pattern": "^(-?)P(?=\\d|T\\d)(?:(\\d+)Y)?(?:(\\d+)M)?(?:(\\d+)([DW]))?(?:T(?:(\\d+)H)?(?:(\\d+)M)?(?:(\\d+(?:\\.\\d+)?)S)?)?$"
+        },
+        "score": {
+            "type": "object",
+            "properties": {
+                "scaled": {
+                    "type": "number",
+                    "minimum": -1,
+                    "maximum": 1
+                },
+                "raw": {
+                    "type": "number"
+                },
+                "min": {
+                    "type": "number"
+                },
+                "max": {
+                    "type": "number"
+                }
+            }
         }
     }
 }
