@@ -20,24 +20,6 @@
  *
  * For authorship information, please view the AUTHORS
  * file that was distributed with this source code.
- *
- * Projected Usage
- *
- *  POST/PUT:
- *  $document = new \API\Document\Statement($parsedJson, \API\DocumentState::UNTRUSTED, '1.0.3');
- *  $statement = $document->validate()->normalize()->document(); // validated and normalized stdClass, ready for storage, changes the state with each chain ['UNTRUSTED->VALIDTED->READY]
- *
- *  REST response
- *  $document = new \API\Document\Statement($mongoDocument, \API\DocumentState::TRUSTED, '1.0.3');
- *  $document->validate()->normalize(); //deals with minor incositencies, will in future also remove meta properties
- *  $json = json_encode($document);
- *
- *  $document will have convenience methods and reveal the convenience methods of subproperties
- *  $document->isReferencing();
- *  $document->actor->isAgent();
- *  $document->object->isSubStatement();
- *
- *  etc..
  */
 
 namespace API\Document;
